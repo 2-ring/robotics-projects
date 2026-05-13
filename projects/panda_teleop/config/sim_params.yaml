@@ -1,0 +1,9 @@
+# MuJoCo Simulation Node parameters
+mujoco_sim_node:
+  ros__parameters:
+    sim_timestep: 0.001        # Physics timestep (s)
+    publish_rate: 500.0        # State publish rate (Hz)
+    realtime_factor: 1.0       # 1.0 = realtime, 0 = unlimited
+    use_viewer: true           # Open MuJoCo viewer
+    paused: false              # Start paused
+    initial_keyframe: "home"   # Starting configuration

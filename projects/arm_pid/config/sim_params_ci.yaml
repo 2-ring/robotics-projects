@@ -1,0 +1,10 @@
+# CI/autograding simulation parameters — headless, no viewer, max speed
+mujoco_sim_node:
+  ros__parameters:
+    sim_timestep: 0.001
+    publish_rate: 500.0
+    realtime_factor: 1.0
+    use_viewer: false
+    paused: false
+    initial_keyframe: "home"
+    gravity_comp_hold: true

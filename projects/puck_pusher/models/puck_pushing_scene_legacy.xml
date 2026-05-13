@@ -1,0 +1,288 @@
+<mujoco model="puck_pushing_scene">
+  <!-- Include the Menagerie Panda model -->
+  <include file="panda.xml"/>
+
+  <compiler angle="radian" autolimits="true"/>
+  <option timestep="0.002" gravity="0 0 -9.81" integrator="implicitfast"/>
+
+  <statistic center="0.4 0 0.4" extent="1.0"/>
+
+  <visual>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global azimuth="120" elevation="-20"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0" width="512" height="3072"/>
+    <texture type="2d" name="groundplane" builtin="checker" mark="edge"
+      rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3" markrgb="0.8 0.8 0.8" width="300" height="300"/>
+    <material name="groundplane" texture="groundplane" texuniform="true" texrepeat="5 5" reflectance="0.2"/>
+    <material name="table_mat" rgba="0.45 0.35 0.25 1" specular="0.2" shininess="0.1"/>
+    <material name="puck_mat" rgba="0.85 0.20 0.20 1" specular="0.3" shininess="0.5"/>
+    <material name="goal_mat" rgba="0.15 0.80 0.25 0.4"/>
+    <material name="pusher_mat" rgba="0.30 0.30 0.35 1" specular="0.6" shininess="0.8"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0 0 1.5" dir="0 0 -1" directional="true"/>
+    <geom name="floor" size="0 0 0.05" type="plane" material="groundplane"/>
+
+    <!-- Table (near edge at x=0.20 → 20 cm gap from robot base at origin) -->
+    <body name="table" pos="0.65 0 0.2">
+      <geom name="table_top" type="box" size="0.35 0.45 0.02" pos="0 0 0.2" material="table_mat" mass="20"/>
+      <geom name="table_leg1" type="cylinder" size="0.025 0.2" pos="0.30 0.40 0" material="table_mat"/>
+      <geom name="table_leg2" type="cylinder" size="0.025 0.2" pos="-0.30 0.40 0" material="table_mat"/>
+      <geom name="table_leg3" type="cylinder" size="0.025 0.2" pos="0.30 -0.40 0" material="table_mat"/>
+      <geom name="table_leg4" type="cylinder" size="0.025 0.2" pos="-0.30 -0.40 0" material="table_mat"/>
+      <!-- Walls around the table to prevent puck from falling -->
+      <geom name="table_wall_back" type="box" pos="0.35 0 0.23" size="0.01 0.45 0.01" material="table_mat"/>
+      <geom name="table_wall_left" type="box" pos="0 0.45 0.23" size="0.35 0.01 0.01" material="table_mat"/>
+      <geom name="table_wall_right" type="box" pos="0 -0.45 0.23" size="0.35 0.01 0.01" material="table_mat"/>
+    </body>
+
+    <!-- Y-shaped pusher attached to hand (rigidly) -->
+    <body name="pusher_mount" pos="0 0 0">
+      <!-- The pusher is defined relative to the hand body.
+           It will be welded to the hand via an equality constraint. -->
+    </body>
+
+    <!-- Puck (free body on table surface) -->
+    <body name="puck" pos="0.30 0.0 0.44">
+      <freejoint name="puck_free"/>
+      <inertial pos="0 0 0" mass="0.1" diaginertia="0.00005 0.00005 0.00003"/>
+      <geom name="puck_geom" type="cylinder" size="0.03 0.012" material="puck_mat"
+            friction="0.4 0.02 0.01" condim="4"/>
+      <site name="puck_site" pos="0 0 0" size="0.005" rgba="1 0 0 0.5"/>
+    </body>
+
+    <!-- Goal marker (visual only, mocap body for repositioning) -->
+    <body name="goal" mocap="true" pos="0.48 0.10 0.43">
+      <geom name="goal_geom" type="cylinder" size="0.04 0.002" material="goal_mat"
+            contype="0" conaffinity="0"/>
+      <site name="goal_site" pos="0 0 0" size="0.005" rgba="0 1 0 0.5"/>
+    </body>
+
+    <!-- Fork tool (attached to the hand TCP via weld).
+         Shape: vertical stem, a horizontal crossbar, and two PARALLEL prongs
+         pointing forward like a real dinner fork. Prongs are 8 cm apart —
+         2 cm wider than the 6 cm puck diameter, so the puck nests cleanly
+         between them when pushed. -->
+    <body name="y_pusher" pos="0 0 0.1034" quat="0.70710678 0 0 0.70710678">
+      <freejoint name="y_pusher_free"/>
+      <inertial pos="0 0 0.12" mass="0.15" diaginertia="0.0002 0.0002 0.0001"/>
+      <!-- Stem: capsule from z=0 to z=0.10 along the fork's local +Z -->
+      <geom name="pusher_stem" type="capsule" size="0.008 0.05" pos="0 0 0.05" material="pusher_mat"
+            friction="1.2 0.02 0.01" condim="4"/>
+      <!-- Crossbar: horizontal capsule at the top of the stem, from x=-0.04 to x=+0.04 -->
+      <geom name="pusher_crossbar" type="capsule" size="0.008 0.04" pos="0 0 0.10"
+            euler="0 1.5708 0" material="pusher_mat" friction="1.2 0.02 0.01" condim="4"/>
+      <!-- Left prong: parallel to stem, at x=-0.04, from z=0.10 to z=0.17 -->
+      <geom name="pusher_left" type="capsule" size="0.006 0.035" pos="-0.04 0 0.135"
+            material="pusher_mat" friction="1.2 0.02 0.01" condim="4"/>
+      <!-- Right prong: parallel to stem, at x=+0.04, from z=0.10 to z=0.17 -->
+      <geom name="pusher_right" type="capsule" size="0.006 0.035" pos="0.04 0 0.135"
+            material="pusher_mat" friction="1.2 0.02 0.01" condim="4"/>
+      <!-- Tip site: between the prong tips (the contact point with the puck) -->
+      <site name="pusher_tip_site" pos="0 0 0.17" size="0.005" rgba="0 0 1 0.5"/>
+    </body>
+  </worldbody>
+
+  <!-- Weld the fork to the Panda hand at the TCP (tool center point).
+       TCP is 0.1034 m along the hand's local +Z axis — the point between
+       the closed fingertips that the IK solver drives. -->
+  <equality>
+    <weld body1="hand" body2="y_pusher" relpose="0 0 0 1 0 0 0" solref="0.0005 1" solimp="0.99 0.999 0.0001"/>
+  </equality>
+
+  <!-- ======================== -->
+  <!-- Sensors for ROS2 bridge  -->
+  <!-- ======================== -->
+  <sensor>
+    <!-- Joint position sensors -->
+    <jointpos name="joint1_pos" joint="joint1"/>
+    <jointpos name="joint2_pos" joint="joint2"/>
+    <jointpos name="joint3_pos" joint="joint3"/>
+    <jointpos name="joint4_pos" joint="joint4"/>
+    <jointpos name="joint5_pos" joint="joint5"/>
+    <jointpos name="joint6_pos" joint="joint6"/>
+    <jointpos name="joint7_pos" joint="joint7"/>
+    <!-- Joint velocity sensors -->
+    <jointvel name="joint1_vel" joint="joint1"/>
+    <jointvel name="joint2_vel" joint="joint2"/>
+    <jointvel name="joint3_vel" joint="joint3"/>
+    <jointvel name="joint4_vel" joint="joint4"/>
+    <jointvel name="joint5_vel" joint="joint5"/>
+    <jointvel name="joint6_vel" joint="joint6"/>
+    <jointvel name="joint7_vel" joint="joint7"/>
+    <!-- Finger sensors -->
+    <jointpos name="finger1_pos" joint="finger_joint1"/>
+    <jointpos name="finger2_pos" joint="finger_joint2"/>
+    <!-- End-effector sensors -->
+    <framepos name="ee_pos" objtype="body" objname="hand"/>
+    <framequat name="ee_quat" objtype="body" objname="hand"/>
+    <!-- Pusher tip -->
+    <framepos name="pusher_tip_pos" objtype="site" objname="pusher_tip_site"/>
+    <!-- Puck state -->
+    <framepos name="puck_pos" objtype="site" objname="puck_site"/>
+    <framequat name="puck_quat" objtype="body" objname="puck"/>
+    <framelinvel name="puck_vel" objtype="body" objname="puck"/>
+    <!-- Goal position -->
+    <framepos name="goal_pos" objtype="site" objname="goal_site"/>
+  </sensor>
+
+  <keyframe>
+    <!-- Home pose: arm compact near link0, gripper closed, fork welded to
+         the hand at the TCP. Joint7 rotated +pi/2 from the midpoint, twisting
+         the wrist 90 deg about its own Z axis.
+         qpos order: 7 arm + 2 fingers + 7 puck_free + 7 y_pusher_free. -->
+    <key name="home"
+         qpos="-0.2637 -1.4513 0.0741 -3.0143 -0.7077 3.1311 0.0 0 0 0.30 0 0.44 1 0 0 0 0 0 0.1034 0.70710678 0 0 0.70710678"
+         ctrl="-0.2637 -1.4513 0.0741 -3.0143 -0.7077 3.1311 0.0 0"/>
+  </keyframe>
+</mujoco>
+
+
+<!-- <mujoco model="puck_pushing_scene">
+  <!-- Include the Menagerie Panda model -->
+  <include file="panda.xml"/>
+
+  <compiler angle="radian" autolimits="true"/>
+  <option timestep="0.002" gravity="0 0 -9.81" integrator="implicitfast"/>
+
+  <statistic center="0.4 0 0.4" extent="1.0"/>
+
+  <visual>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global azimuth="120" elevation="-20"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0" width="512" height="3072"/>
+    <texture type="2d" name="groundplane" builtin="checker" mark="edge"
+      rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3" markrgb="0.8 0.8 0.8" width="300" height="300"/>
+    <material name="groundplane" texture="groundplane" texuniform="true" texrepeat="5 5" reflectance="0.2"/>
+    <material name="table_mat" rgba="0.45 0.35 0.25 1" specular="0.2" shininess="0.1"/>
+    <material name="puck_mat" rgba="0.85 0.20 0.20 1" specular="0.3" shininess="0.5"/>
+    <material name="goal_mat" rgba="0.15 0.80 0.25 0.4"/>
+    <material name="pusher_mat" rgba="0.30 0.30 0.35 1" specular="0.6" shininess="0.8"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0 0 1.5" dir="0 0 -1" directional="true"/>
+    <geom name="floor" size="0 0 0.05" type="plane" material="groundplane"/>
+
+    <!-- Table (near edge at x=0.20 → 20 cm gap from robot base at origin) -->
+    <body name="table" pos="0.55 0 0.2">
+      <geom name="table_top" type="box" size="0.35 0.45 0.02" pos="0 0 0.2" material="table_mat" mass="20"/>
+      <geom name="table_leg1" type="cylinder" size="0.025 0.2" pos="0.30 0.40 0" material="table_mat"/>
+      <geom name="table_leg2" type="cylinder" size="0.025 0.2" pos="-0.30 0.40 0" material="table_mat"/>
+      <geom name="table_leg3" type="cylinder" size="0.025 0.2" pos="0.30 -0.40 0" material="table_mat"/>
+      <geom name="table_leg4" type="cylinder" size="0.025 0.2" pos="-0.30 -0.40 0" material="table_mat"/>
+      <!-- Walls around the table to prevent puck from falling -->
+      <geom name="table_wall_back" type="box" pos="0.35 0 0.23" size="0.01 0.45 0.01" material="table_mat"/>
+      <geom name="table_wall_left" type="box" pos="0 0.45 0.23" size="0.35 0.01 0.01" material="table_mat"/>
+      <geom name="table_wall_right" type="box" pos="0 -0.45 0.23" size="0.35 0.01 0.01" material="table_mat"/>
+    </body>
+
+    <!-- Y-shaped pusher attached to hand (rigidly) -->
+    <body name="pusher_mount" pos="0 0 0">
+      <!-- The pusher is defined relative to the hand body.
+           It will be welded to the hand via an equality constraint. -->
+    </body>
+
+    <!-- Puck (free body on table surface) -->
+    <body name="puck" pos="0.30 0.0 0.44">
+      <freejoint name="puck_free"/>
+      <inertial pos="0 0 0" mass="0.1" diaginertia="0.00005 0.00005 0.00003"/>
+      <geom name="puck_geom" type="cylinder" size="0.03 0.012" material="puck_mat"
+            friction="0.4 0.02 0.01" condim="4"/>
+      <site name="puck_site" pos="0 0 0" size="0.005" rgba="1 0 0 0.5"/>
+    </body>
+
+    <!-- Goal marker (visual only, mocap body for repositioning) -->
+    <body name="goal" mocap="true" pos="0.48 0.10 0.43">
+      <geom name="goal_geom" type="cylinder" size="0.04 0.002" material="goal_mat"
+            contype="0" conaffinity="0"/>
+      <site name="goal_site" pos="0 0 0" size="0.005" rgba="0 1 0 0.5"/>
+    </body>
+
+    <!-- Fork tool (attached to the hand TCP via weld).
+         Shape: vertical stem, a horizontal crossbar, and two PARALLEL prongs
+         pointing forward like a real dinner fork. Prongs are 8 cm apart —
+         2 cm wider than the 6 cm puck diameter, so the puck nests cleanly
+         between them when pushed. -->
+    <body name="y_pusher" pos="0.30 0 0.65" quat="0.5 0.5 0.5 0.5">
+      <freejoint name="y_pusher_free"/>
+      <inertial pos="0 0 0.12" mass="0.15" diaginertia="0.0002 0.0002 0.0001"/>
+      <!-- Stem: capsule from z=0 to z=0.10 along the fork's local +Z -->
+      <geom name="pusher_stem" type="capsule" size="0.008 0.05" pos="0 0 0.05" material="pusher_mat"
+            friction="0.6 0.02 0.01"/>
+      <!-- Crossbar: horizontal capsule at the top of the stem, from x=-0.04 to x=+0.04 -->
+      <geom name="pusher_crossbar" type="capsule" size="0.008 0.04" pos="0 0 0.10"
+            euler="0 1.5708 0" material="pusher_mat" friction="0.6 0.02 0.01"/>
+      <!-- Left prong: parallel to stem, at x=-0.04, from z=0.10 to z=0.17 -->
+      <geom name="pusher_left" type="capsule" size="0.006 0.035" pos="-0.04 0 0.135"
+            material="pusher_mat" friction="0.6 0.02 0.01"/>
+      <!-- Right prong: parallel to stem, at x=+0.04, from z=0.10 to z=0.17 -->
+      <geom name="pusher_right" type="capsule" size="0.006 0.035" pos="0.04 0 0.135"
+            material="pusher_mat" friction="0.6 0.02 0.01"/>
+      <!-- Tip site: between the prong tips (the contact point with the puck) -->
+      <site name="pusher_tip_site" pos="0 0 0.17" size="0.005" rgba="0 0 1 0.5"/>
+    </body>
+  </worldbody>
+
+  <!-- Weld the fork to the Panda hand at the TCP (tool center point).
+       TCP is 0.1034 m along the hand's local +Z axis — the point between
+       the closed fingertips that the IK solver drives. -->
+  <equality>
+    <weld body1="hand" body2="y_pusher" relpose="0 0 0.1034 1 0 0 0"/>
+  </equality>
+
+  <!-- ======================== -->
+  <!-- Sensors for ROS2 bridge  -->
+  <!-- ======================== -->
+  <sensor>
+    <!-- Joint position sensors -->
+    <jointpos name="joint1_pos" joint="joint1"/>
+    <jointpos name="joint2_pos" joint="joint2"/>
+    <jointpos name="joint3_pos" joint="joint3"/>
+    <jointpos name="joint4_pos" joint="joint4"/>
+    <jointpos name="joint5_pos" joint="joint5"/>
+    <jointpos name="joint6_pos" joint="joint6"/>
+    <jointpos name="joint7_pos" joint="joint7"/>
+    <!-- Joint velocity sensors -->
+    <jointvel name="joint1_vel" joint="joint1"/>
+    <jointvel name="joint2_vel" joint="joint2"/>
+    <jointvel name="joint3_vel" joint="joint3"/>
+    <jointvel name="joint4_vel" joint="joint4"/>
+    <jointvel name="joint5_vel" joint="joint5"/>
+    <jointvel name="joint6_vel" joint="joint6"/>
+    <jointvel name="joint7_vel" joint="joint7"/>
+    <!-- Finger sensors -->
+    <jointpos name="finger1_pos" joint="finger_joint1"/>
+    <jointpos name="finger2_pos" joint="finger_joint2"/>
+    <!-- End-effector sensors -->
+    <framepos name="ee_pos" objtype="body" objname="hand"/>
+    <framequat name="ee_quat" objtype="body" objname="hand"/>
+    <!-- Pusher tip -->
+    <framepos name="pusher_tip_pos" objtype="site" objname="pusher_tip_site"/>
+    <!-- Puck state -->
+    <framepos name="puck_pos" objtype="site" objname="puck_site"/>
+    <framequat name="puck_quat" objtype="body" objname="puck"/>
+    <framelinvel name="puck_vel" objtype="body" objname="puck"/>
+    <!-- Goal position -->
+    <framepos name="goal_pos" objtype="site" objname="goal_site"/>
+  </sensor>
+
+  <keyframe>
+    <!-- Home pose: arm compact near link0, gripper closed, fork welded to
+         the hand at the TCP. Joint7 rotated +pi/2 from the midpoint, twisting
+         the wrist 90 deg about its own Z axis.
+         qpos order: 7 arm + 2 fingers + 7 puck_free + 7 y_pusher_free. -->
+    <key name="home"
+         qpos="-0.2637 -1.4513 0.0741 -3.0143 -0.7077 3.1311 1.57 0 0 0.30 0 0.44 1 0 0 0 0.30 0 0.60 0.0922 0.7011 -0.0923 0.7011"
+         ctrl="-0.2637 -1.4513 0.0741 -3.0143 -0.7077 3.1311 1.57 0"/>
+  </keyframe>
+</mujoco> -->

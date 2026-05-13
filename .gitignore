@@ -1,0 +1,39 @@
+# ROS 2 / colcon build artifacts
+build/
+install/
+log/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+.installed.cfg
+*.egg
+
+# Environments
+.venv/
+venv/
+env/
+.env
+.envrc
+
+# Caches & test artifacts
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# MuJoCo runtime logs
+MUJOCO_LOG.TXT
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/
+.claude/

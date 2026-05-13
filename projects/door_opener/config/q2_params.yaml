@@ -1,0 +1,31 @@
+mujoco_sim_node:
+  ros__parameters:
+    sim_timestep: 0.002
+    publish_rate: 500.0
+    realtime_factor: 1.0
+    use_viewer: true
+    initial_keyframe: "home"
+    gravity_comp_hold: true
+
+bridge_node:
+  ros__parameters:
+    control_rate: 500.0
+    smooth_motion: true
+    publish_tf: true
+    initial_arm_position: [0.0, 0.0, 0.0, -1.57079, 0.0, 1.57079, -0.7853]
+    initial_gripper_ctrl: 255.0
+
+q2_sensor_node:
+  ros__parameters:
+    publish_rate_hz: 100.0
+
+goal_classifier_node:
+  ros__parameters:
+    check_rate_hz: 10.0
+    target_angle_rad: -1.3  # ~75 degrees open (toward arm)
+    angle_tolerance_rad: 0.15
+
+q2_tester:
+  ros__parameters:
+    target_angle_rad: -1.3  # ~75 degrees open (toward arm)
+    angle_tolerance_rad: 0.15

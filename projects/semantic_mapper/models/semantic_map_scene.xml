@@ -1,0 +1,308 @@
+<mujoco model="semantic_map_scene">
+    <compiler angle="radian" autolimits="true"/>
+    <option timestep="0.002" gravity="0 0 -9.81" integrator="implicitfast"/>
+
+    <visual>
+        <headlight ambient="0.35 0.35 0.35" diffuse="0.7 0.7 0.7"/>
+        <global azimuth="-90" elevation="-90"/>
+    </visual>
+
+    <statistic center="0 0 0.3" extent="2.5"/>
+
+    <default>
+        <geom friction="1.2 0.05 0.01" condim="3"/>
+    </default>
+
+    <asset>
+        <texture name="grid" type="2d" builtin="checker" rgb1="0.90 0.90 0.90" rgb2="0.82 0.82 0.82" width="256" height="256"/>
+        <material name="mat_floor" texture="grid" texrepeat="8 8"/>
+        <material name="mat_wall" rgba="0.45 0.48 0.52 1"/>
+        <material name="mat_table" rgba="0.55 0.40 0.25 1"/>
+        <material name="mat_bot" rgba="0.13 0.42 0.64 1"/>
+        <material name="mat_wheel" rgba="0.08 0.08 0.08 1"/>
+        <!-- Object materials (distinct colors for detection) -->
+        <material name="mat_mug" rgba="0.85 0.15 0.15 1"/>
+        <material name="mat_bottle" rgba="0.15 0.70 0.20 1"/>
+        <material name="mat_box" rgba="0.15 0.25 0.85 1"/>
+        <material name="mat_bowl" rgba="0.90 0.75 0.10 1"/>
+        <material name="mat_can" rgba="0.80 0.40 0.10 1"/>
+    </asset>
+
+    <worldbody>
+        <light name="sun" pos="0 0 3" dir="0 0 -1" diffuse="0.95 0.95 0.95" castshadow="false"/>
+        <geom name="floor" type="plane" pos="0 0 0" size="5 5 0.1" material="mat_floor"/>
+
+        <!-- Room walls: 3m x 3m -->
+        <geom name="wall_north" type="box" pos="0 1.5 0.25" size="1.5 0.04 0.25" material="mat_wall"/>
+        <geom name="wall_south" type="box" pos="0 -1.5 0.25" size="1.5 0.04 0.25" material="mat_wall"/>
+        <geom name="wall_east" type="box" pos="1.5 0 0.25" size="0.04 1.5 0.25" material="mat_wall"/>
+        <geom name="wall_west" type="box" pos="-1.5 0 0.25" size="0.04 1.5 0.25" material="mat_wall"/>
+
+        <!-- Internal partition (horizontal, center) -->
+        <geom name="partition_1" type="box" pos="0.0 0.0 0.25" size="0.5 0.04 0.25" material="mat_wall"/>
+
+        <!-- Table 1: northeast -->
+        <body name="table_1" pos="0.85 0.85 0">
+            <geom name="table1_top" type="box" pos="0 0 0.33" size="0.22 0.22 0.02" material="mat_table" mass="10"/>
+            <geom name="table1_leg1" type="cylinder" size="0.02 0.165" pos="0.18 0.18 0.165" material="mat_table"/>
+            <geom name="table1_leg2" type="cylinder" size="0.02 0.165" pos="-0.18 0.18 0.165" material="mat_table"/>
+            <geom name="table1_leg3" type="cylinder" size="0.02 0.165" pos="0.18 -0.18 0.165" material="mat_table"/>
+            <geom name="table1_leg4" type="cylinder" size="0.02 0.165" pos="-0.18 -0.18 0.165" material="mat_table"/>
+        </body>
+
+        <!-- Table 2: southwest -->
+        <body name="table_2" pos="-0.85 -0.85 0">
+            <geom name="table2_top" type="box" pos="0 0 0.33" size="0.25 0.20 0.02" material="mat_table" mass="10"/>
+            <geom name="table2_leg1" type="cylinder" size="0.02 0.165" pos="0.21 0.16 0.165" material="mat_table"/>
+            <geom name="table2_leg2" type="cylinder" size="0.02 0.165" pos="-0.21 0.16 0.165" material="mat_table"/>
+            <geom name="table2_leg3" type="cylinder" size="0.02 0.165" pos="0.21 -0.16 0.165" material="mat_table"/>
+            <geom name="table2_leg4" type="cylinder" size="0.02 0.165" pos="-0.21 -0.16 0.165" material="mat_table"/>
+        </body>
+
+        <!-- Table 3: northwest -->
+        <body name="table_3" pos="-0.85 0.85 0">
+            <geom name="table3_top" type="box" pos="0 0 0.33" size="0.20 0.22 0.02" material="mat_table" mass="10"/>
+            <geom name="table3_leg1" type="cylinder" size="0.02 0.165" pos="0.16 0.18 0.165" material="mat_table"/>
+            <geom name="table3_leg2" type="cylinder" size="0.02 0.165" pos="-0.16 0.18 0.165" material="mat_table"/>
+            <geom name="table3_leg3" type="cylinder" size="0.02 0.165" pos="0.16 -0.18 0.165" material="mat_table"/>
+            <geom name="table3_leg4" type="cylinder" size="0.02 0.165" pos="-0.16 -0.18 0.165" material="mat_table"/>
+        </body>
+
+        <!-- ======== Objects on tables ======== -->
+        <!-- Mug on table 1 (cylinder body + torus rim + box handle) -->
+        <body name="obj_mug" pos="0.75 0.95 0.35">
+            <geom name="mug_body" type="cylinder" size="0.035 0.04" material="mat_mug" mass="0.25"/>
+            <geom name="mug_rim" type="cylinder" size="0.038 0.005" pos="0 0 0.04" material="mat_mug" mass="0.02"/>
+            <geom name="mug_handle" type="capsule" fromto="0.035 0 0.02 0.055 0 0.02" size="0.008" material="mat_mug" mass="0.03" contype="0" conaffinity="0"/>
+            <geom name="mug_handle_top" type="capsule" fromto="0.035 0 0.02 0.035 0 -0.015" size="0.006" material="mat_mug" mass="0.01" contype="0" conaffinity="0"/>
+            <geom name="mug_handle_bot" type="capsule" fromto="0.055 0 0.02 0.055 0 -0.015" size="0.006" material="mat_mug" mass="0.01" contype="0" conaffinity="0"/>
+            <site name="obj_mug_site" pos="0 0 0" size="0.005" rgba="1 0 0 0.5"/>
+        </body>
+
+        <!-- Bottle on table 1 (wide base + tapered neck + cap) -->
+        <body name="obj_bottle" pos="0.95 0.75 0.35">
+            <geom name="bottle_base" type="cylinder" size="0.028 0.05" material="mat_bottle" mass="0.3"/>
+            <geom name="bottle_neck" type="cylinder" size="0.014 0.03" pos="0 0 0.08" material="mat_bottle" mass="0.05"/>
+            <geom name="bottle_shoulder" type="cylinder" size="0.021 0.01" pos="0 0 0.055" material="mat_bottle" mass="0.03" contype="0" conaffinity="0"/>
+            <geom name="bottle_cap" type="cylinder" size="0.016 0.008" pos="0 0 0.118" rgba="0.3 0.3 0.3 1" mass="0.02" contype="0" conaffinity="0"/>
+            <site name="obj_bottle_site" pos="0 0 0" size="0.005" rgba="0 1 0 0.5"/>
+        </body>
+
+        <!-- Box on table 2 (open-top box with visible interior) -->
+        <body name="obj_box" pos="-0.75 -0.80 0.35">
+            <!-- Bottom panel -->
+            <geom name="box_bottom" type="box" size="0.055 0.04 0.002" pos="0 0 0" material="mat_box" mass="0.2"/>
+            <!-- Four walls of the box -->
+            <geom name="box_front"  type="box" size="0.055 0.003 0.03" pos="0 0.037 0.03" material="mat_box" mass="0.05"/>
+            <geom name="box_back"   type="box" size="0.055 0.003 0.03" pos="0 -0.037 0.03" material="mat_box" mass="0.05"/>
+            <geom name="box_left"   type="box" size="0.003 0.04 0.03" pos="-0.052 0 0.03" material="mat_box" mass="0.05"/>
+            <geom name="box_right"  type="box" size="0.003 0.04 0.03" pos="0.052 0 0.03" material="mat_box" mass="0.05"/>
+            <!-- Lid flaps (slightly open, angled outward) -->
+            <geom name="box_flap1" type="box" size="0.055 0.015 0.002" pos="0 0.045 0.06" euler="0.3 0 0" material="mat_box" mass="0.02" contype="0" conaffinity="0"/>
+            <geom name="box_flap2" type="box" size="0.055 0.015 0.002" pos="0 -0.045 0.06" euler="-0.3 0 0" material="mat_box" mass="0.02" contype="0" conaffinity="0"/>
+            <site name="obj_box_site" pos="0 0 0" size="0.005" rgba="0 0 1 0.5"/>
+        </body>
+
+        <!-- Bowl on table 2 (concave bowl with dark interior) -->
+        <body name="obj_bowl" pos="-0.95 -0.90 0.35">
+            <!-- Flat base disc -->
+            <geom name="bowl_base" type="cylinder" size="0.025 0.003" pos="0 0 0" material="mat_bowl" mass="0.08"/>
+            <!-- Stacked rings expanding outward to form concave profile -->
+            <geom name="bowl_ring1" type="cylinder" size="0.030 0.004" pos="0 0 0.006" material="mat_bowl" mass="0.03" contype="0" conaffinity="0"/>
+            <geom name="bowl_ring2" type="cylinder" size="0.037 0.004" pos="0 0 0.012" material="mat_bowl" mass="0.03" contype="0" conaffinity="0"/>
+            <geom name="bowl_ring3" type="cylinder" size="0.044 0.004" pos="0 0 0.018" material="mat_bowl" mass="0.03" contype="0" conaffinity="0"/>
+            <geom name="bowl_ring4" type="cylinder" size="0.050 0.004" pos="0 0 0.024" material="mat_bowl" mass="0.03" contype="0" conaffinity="0"/>
+            <!-- Rim at top (slightly wider) -->
+            <geom name="bowl_rim" type="cylinder" size="0.053 0.003" pos="0 0 0.030" material="mat_bowl" mass="0.02" contype="0" conaffinity="0"/>
+            <site name="obj_bowl_site" pos="0 0 0" size="0.005" rgba="1 1 0 0.5"/>
+        </body>
+
+        <!-- Can on table 3 (cylinder body + top/bottom rims + pull tab) -->
+        <body name="obj_can" pos="-0.80 0.95 0.35">
+            <geom name="can_body" type="cylinder" size="0.03 0.055" material="mat_can" mass="0.30"/>
+            <geom name="can_top_rim" type="cylinder" size="0.028 0.003" pos="0 0 0.055" rgba="0.75 0.75 0.75 1" mass="0.02" contype="0" conaffinity="0"/>
+            <geom name="can_bot_rim" type="cylinder" size="0.031 0.003" pos="0 0 -0.055" rgba="0.75 0.75 0.75 1" mass="0.02" contype="0" conaffinity="0"/>
+            <geom name="can_tab" type="capsule" fromto="-0.01 0 0.058 0.01 0 0.058" size="0.004" rgba="0.7 0.7 0.7 1" mass="0.01" contype="0" conaffinity="0"/>
+            <site name="obj_can_site" pos="0 0 0" size="0.005" rgba="1 0.5 0 0.5"/>
+        </body>
+
+        <!-- ======== TurtleBot ======== -->
+        <body name="turtlebot" pos="0 -1.0 0.036">
+            <freejoint name="tb_free"/>
+            <inertial pos="0 0 0" mass="2.2" diaginertia="0.02 0.02 0.03"/>
+            <geom name="tb_chassis_col" type="cylinder" size="0.078 0.020" material="mat_bot" contype="0" conaffinity="0"/>
+            <geom name="tb_chassis_vis" type="cylinder" size="0.095 0.014" pos="0 0 0.024" material="mat_bot" contype="0" conaffinity="0"/>
+            <geom name="tb_caster_front" type="sphere" pos="0.075 0 -0.025" size="0.008" mass="0.02" friction="0.02 0.001 0.0001" condim="3"/>
+            <geom name="tb_caster_back" type="sphere" pos="-0.075 0 -0.025" size="0.008" mass="0.02" friction="0.02 0.001 0.0001" condim="3"/>
+
+            <body name="tb_left_wheel" pos="0 0.09 0">
+                <joint name="tb_left_wheel_joint" type="hinge" axis="0 1 0" damping="0.05" frictionloss="0.01"/>
+                <geom name="tb_left_wheel_geom" type="cylinder" size="0.033 0.016" euler="1.57079632679 0 0" material="mat_wheel" friction="1.8 0.02 0.001" condim="6"/>
+            </body>
+
+            <body name="tb_right_wheel" pos="0 -0.09 0">
+                <joint name="tb_right_wheel_joint" type="hinge" axis="0 1 0" damping="0.05" frictionloss="0.01"/>
+                <geom name="tb_right_wheel_geom" type="cylinder" size="0.033 0.016" euler="1.57079632679 0 0" material="mat_wheel" friction="1.8 0.02 0.001" condim="6"/>
+            </body>
+
+            <site name="tb_base_site" pos="0 0 0" size="0.005" rgba="0 1 0 1"/>
+
+            <!-- Camera mounted on top of robot, looking forward -->
+            <body name="tb_camera" pos="0.05 0 0.10">
+                <site name="tb_camera_site" pos="0 0 0" size="0.01" rgba="0.5 0.5 1 1"/>
+                <geom name="tb_camera_vis" type="box" size="0.015 0.025 0.015" rgba="0.3 0.3 0.3 1" contype="0" conaffinity="0" mass="0.05"/>
+            </body>
+
+            <!-- LiDAR sensors (1.2 rad / ~69 degree fan, 61 beams, matching detector FOV) -->
+            <body name="tb_laser_head" pos="0 0 0.06">
+                <site name="tb_laser_mount" pos="0 0 0" size="0.004" rgba="1 0.6 0 1"/>
+                <site name="tb_laser_00" pos="0 0 0" zaxis="0.825335615 -0.564642473 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_01" pos="0 0 0" zaxis="0.836462650 -0.548023937 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_02" pos="0 0 0" zaxis="0.847255111 -0.531186198 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_03" pos="0 0 0" zaxis="0.857708681 -0.514135992 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_04" pos="0 0 0" zaxis="0.867819180 -0.496880138 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_05" pos="0 0 0" zaxis="0.877582562 -0.479425539 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_06" pos="0 0 0" zaxis="0.886994923 -0.461779176 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_07" pos="0 0 0" zaxis="0.896052498 -0.443948107 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_08" pos="0 0 0" zaxis="0.904751663 -0.425939465 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_09" pos="0 0 0" zaxis="0.913088940 -0.407760453 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_10" pos="0 0 0" zaxis="0.921060994 -0.389418342 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_11" pos="0 0 0" zaxis="0.928664636 -0.370920469 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_12" pos="0 0 0" zaxis="0.935896824 -0.352274233 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_13" pos="0 0 0" zaxis="0.942754666 -0.333487092 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_14" pos="0 0 0" zaxis="0.949235418 -0.314566561 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_15" pos="0 0 0" zaxis="0.955336489 -0.295520207 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_16" pos="0 0 0" zaxis="0.961055438 -0.276355649 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_17" pos="0 0 0" zaxis="0.966389978 -0.257080552 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_18" pos="0 0 0" zaxis="0.971337975 -0.237702626 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_19" pos="0 0 0" zaxis="0.975897449 -0.218229623 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_20" pos="0 0 0" zaxis="0.980066578 -0.198669331 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_21" pos="0 0 0" zaxis="0.983843693 -0.179029573 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_22" pos="0 0 0" zaxis="0.987227283 -0.159318207 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_23" pos="0 0 0" zaxis="0.990215996 -0.139543115 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_24" pos="0 0 0" zaxis="0.992808636 -0.119712207 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_25" pos="0 0 0" zaxis="0.995004165 -0.099833417 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_26" pos="0 0 0" zaxis="0.996801706 -0.079914694 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_27" pos="0 0 0" zaxis="0.998200540 -0.059964006 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_28" pos="0 0 0" zaxis="0.999200107 -0.039989334 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_29" pos="0 0 0" zaxis="0.999800007 -0.019998667 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_30" pos="0 0 0" zaxis="1.000000000 0.000000000 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_31" pos="0 0 0" zaxis="0.999800007 0.019998667 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_32" pos="0 0 0" zaxis="0.999200107 0.039989334 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_33" pos="0 0 0" zaxis="0.998200540 0.059964006 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_34" pos="0 0 0" zaxis="0.996801706 0.079914694 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_35" pos="0 0 0" zaxis="0.995004165 0.099833417 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_36" pos="0 0 0" zaxis="0.992808636 0.119712207 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_37" pos="0 0 0" zaxis="0.990215996 0.139543115 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_38" pos="0 0 0" zaxis="0.987227283 0.159318207 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_39" pos="0 0 0" zaxis="0.983843693 0.179029573 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_40" pos="0 0 0" zaxis="0.980066578 0.198669331 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_41" pos="0 0 0" zaxis="0.975897449 0.218229623 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_42" pos="0 0 0" zaxis="0.971337975 0.237702626 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_43" pos="0 0 0" zaxis="0.966389978 0.257080552 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_44" pos="0 0 0" zaxis="0.961055438 0.276355649 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_45" pos="0 0 0" zaxis="0.955336489 0.295520207 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_46" pos="0 0 0" zaxis="0.949235418 0.314566561 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_47" pos="0 0 0" zaxis="0.942754666 0.333487092 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_48" pos="0 0 0" zaxis="0.935896824 0.352274233 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_49" pos="0 0 0" zaxis="0.928664636 0.370920469 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_50" pos="0 0 0" zaxis="0.921060994 0.389418342 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_51" pos="0 0 0" zaxis="0.913088940 0.407760453 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_52" pos="0 0 0" zaxis="0.904751663 0.425939465 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_53" pos="0 0 0" zaxis="0.896052498 0.443948107 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_54" pos="0 0 0" zaxis="0.886994923 0.461779176 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_55" pos="0 0 0" zaxis="0.877582562 0.479425539 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_56" pos="0 0 0" zaxis="0.867819180 0.496880138 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_57" pos="0 0 0" zaxis="0.857708681 0.514135992 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_58" pos="0 0 0" zaxis="0.847255111 0.531186198 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_59" pos="0 0 0" zaxis="0.836462650 0.548023937 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_60" pos="0 0 0" zaxis="0.825335615 0.564642473 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+            </body>
+        </body>
+    </worldbody>
+
+    <actuator>
+        <velocity name="tb_left_wheel_act" joint="tb_left_wheel_joint" kv="2.0" ctrlrange="-20 20" forcerange="-3 3"/>
+        <velocity name="tb_right_wheel_act" joint="tb_right_wheel_joint" kv="2.0" ctrlrange="-20 20" forcerange="-3 3"/>
+    </actuator>
+
+    <sensor>
+        <framepos name="tb_base_pos" objtype="site" objname="tb_base_site"/>
+        <framequat name="tb_base_quat" objtype="site" objname="tb_base_site"/>
+        <!-- Camera pose sensor -->
+        <framepos name="tb_camera_pos" objtype="site" objname="tb_camera_site"/>
+        <framequat name="tb_camera_quat" objtype="site" objname="tb_camera_site"/>
+        <!-- Object position sensors (ground truth for detector) -->
+        <framepos name="obj_mug_pos" objtype="site" objname="obj_mug_site"/>
+        <framepos name="obj_bottle_pos" objtype="site" objname="obj_bottle_site"/>
+        <framepos name="obj_box_pos" objtype="site" objname="obj_box_site"/>
+        <framepos name="obj_bowl_pos" objtype="site" objname="obj_bowl_site"/>
+        <framepos name="obj_can_pos" objtype="site" objname="obj_can_site"/>
+        <!-- LiDAR rangefinders -->
+        <rangefinder name="tb_laser_00" site="tb_laser_00"/>
+        <rangefinder name="tb_laser_01" site="tb_laser_01"/>
+        <rangefinder name="tb_laser_02" site="tb_laser_02"/>
+        <rangefinder name="tb_laser_03" site="tb_laser_03"/>
+        <rangefinder name="tb_laser_04" site="tb_laser_04"/>
+        <rangefinder name="tb_laser_05" site="tb_laser_05"/>
+        <rangefinder name="tb_laser_06" site="tb_laser_06"/>
+        <rangefinder name="tb_laser_07" site="tb_laser_07"/>
+        <rangefinder name="tb_laser_08" site="tb_laser_08"/>
+        <rangefinder name="tb_laser_09" site="tb_laser_09"/>
+        <rangefinder name="tb_laser_10" site="tb_laser_10"/>
+        <rangefinder name="tb_laser_11" site="tb_laser_11"/>
+        <rangefinder name="tb_laser_12" site="tb_laser_12"/>
+        <rangefinder name="tb_laser_13" site="tb_laser_13"/>
+        <rangefinder name="tb_laser_14" site="tb_laser_14"/>
+        <rangefinder name="tb_laser_15" site="tb_laser_15"/>
+        <rangefinder name="tb_laser_16" site="tb_laser_16"/>
+        <rangefinder name="tb_laser_17" site="tb_laser_17"/>
+        <rangefinder name="tb_laser_18" site="tb_laser_18"/>
+        <rangefinder name="tb_laser_19" site="tb_laser_19"/>
+        <rangefinder name="tb_laser_20" site="tb_laser_20"/>
+        <rangefinder name="tb_laser_21" site="tb_laser_21"/>
+        <rangefinder name="tb_laser_22" site="tb_laser_22"/>
+        <rangefinder name="tb_laser_23" site="tb_laser_23"/>
+        <rangefinder name="tb_laser_24" site="tb_laser_24"/>
+        <rangefinder name="tb_laser_25" site="tb_laser_25"/>
+        <rangefinder name="tb_laser_26" site="tb_laser_26"/>
+        <rangefinder name="tb_laser_27" site="tb_laser_27"/>
+        <rangefinder name="tb_laser_28" site="tb_laser_28"/>
+        <rangefinder name="tb_laser_29" site="tb_laser_29"/>
+        <rangefinder name="tb_laser_30" site="tb_laser_30"/>
+        <rangefinder name="tb_laser_31" site="tb_laser_31"/>
+        <rangefinder name="tb_laser_32" site="tb_laser_32"/>
+        <rangefinder name="tb_laser_33" site="tb_laser_33"/>
+        <rangefinder name="tb_laser_34" site="tb_laser_34"/>
+        <rangefinder name="tb_laser_35" site="tb_laser_35"/>
+        <rangefinder name="tb_laser_36" site="tb_laser_36"/>
+        <rangefinder name="tb_laser_37" site="tb_laser_37"/>
+        <rangefinder name="tb_laser_38" site="tb_laser_38"/>
+        <rangefinder name="tb_laser_39" site="tb_laser_39"/>
+        <rangefinder name="tb_laser_40" site="tb_laser_40"/>
+        <rangefinder name="tb_laser_41" site="tb_laser_41"/>
+        <rangefinder name="tb_laser_42" site="tb_laser_42"/>
+        <rangefinder name="tb_laser_43" site="tb_laser_43"/>
+        <rangefinder name="tb_laser_44" site="tb_laser_44"/>
+        <rangefinder name="tb_laser_45" site="tb_laser_45"/>
+        <rangefinder name="tb_laser_46" site="tb_laser_46"/>
+        <rangefinder name="tb_laser_47" site="tb_laser_47"/>
+        <rangefinder name="tb_laser_48" site="tb_laser_48"/>
+        <rangefinder name="tb_laser_49" site="tb_laser_49"/>
+        <rangefinder name="tb_laser_50" site="tb_laser_50"/>
+        <rangefinder name="tb_laser_51" site="tb_laser_51"/>
+        <rangefinder name="tb_laser_52" site="tb_laser_52"/>
+        <rangefinder name="tb_laser_53" site="tb_laser_53"/>
+        <rangefinder name="tb_laser_54" site="tb_laser_54"/>
+        <rangefinder name="tb_laser_55" site="tb_laser_55"/>
+        <rangefinder name="tb_laser_56" site="tb_laser_56"/>
+        <rangefinder name="tb_laser_57" site="tb_laser_57"/>
+        <rangefinder name="tb_laser_58" site="tb_laser_58"/>
+        <rangefinder name="tb_laser_59" site="tb_laser_59"/>
+        <rangefinder name="tb_laser_60" site="tb_laser_60"/>
+    </sensor>
+
+    <keyframe>
+        <key name="home" qpos="0 -1.0 0.036 1 0 0 0 0 0" ctrl="0 0"/>
+    </keyframe>
+</mujoco>

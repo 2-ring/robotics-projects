@@ -1,0 +1,50 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+    Property Tree Widget:
+      Expanded: ~
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Enabled: true
+      Name: Grid
+      Plane Cell Count: 10
+      Cell Size: 0.2
+      Line Style:
+        Value: Lines
+      Color: 80; 80; 80
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: Q2 Markers
+      Topic:
+        Value: /q2/visualization_markers
+        Depth: 5
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: world
+    Frame Rate: 30
+  Tools:
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/FocusCamera
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Name: Current View
+      Distance: 1.5
+      Enable Stereo Rendering:
+        Value: false
+      Focal Point:
+        X: 0.4
+        Y: 0.3
+        Z: 0.5
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.05
+      Invert Z Axis: false
+      Near Clip Distance: 0.01
+      Pitch: 0.5
+      Target Frame: world
+      Value: Orbit (rviz_default_plugins)
+      Yaw: 3.9

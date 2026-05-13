@@ -1,0 +1,68 @@
+<mujoco model="panda PID scene">
+  <!--
+    Q2: PID Controller Scene
+
+    Panda arm with torque-only actuators + a floating blue target sphere.
+    The target is a mocap body (not affected by physics) that the student's
+    PID controller should drive the end-effector toward.
+  -->
+
+  <!-- Include the torque-controlled Panda (standalone, not panda.xml) -->
+  <include file="panda_torque.xml"/>
+
+  <statistic center="0.3 0 0.4" extent="1"/>
+
+  <visual>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global azimuth="120" elevation="-20"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0"
+             width="512" height="3072"/>
+    <texture type="2d" name="groundplane" builtin="checker" mark="edge"
+             rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3" markrgb="0.8 0.8 0.8"
+             width="300" height="300"/>
+    <material name="groundplane" texture="groundplane" texuniform="true"
+              texrepeat="5 5" reflectance="0.2"/>
+    <material name="target_mat" rgba="0.0 1.0 0.2 0.6" specular="0.8" shininess="0.5"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0 0 1.5" dir="0 0 -1" directional="true"/>
+    <geom name="floor" size="0 0 0.05" type="plane" material="groundplane"/>
+
+    <!-- Target sphere: mocap body (user/test can move it) -->
+    <body name="target" mocap="true" pos="0.4 0.0 0.5">
+      <geom name="target_sphere" type="sphere" size="0.03"
+            material="target_mat" contype="0" conaffinity="0"
+            group="2"/>
+    </body>
+  </worldbody>
+
+  <!-- Sensors -->
+  <sensor>
+    <!-- Joint position sensors -->
+    <jointpos name="joint1_pos" joint="joint1"/>
+    <jointpos name="joint2_pos" joint="joint2"/>
+    <jointpos name="joint3_pos" joint="joint3"/>
+    <jointpos name="joint4_pos" joint="joint4"/>
+    <jointpos name="joint5_pos" joint="joint5"/>
+    <jointpos name="joint6_pos" joint="joint6"/>
+    <jointpos name="joint7_pos" joint="joint7"/>
+
+    <!-- Joint velocity sensors -->
+    <jointvel name="joint1_vel" joint="joint1"/>
+    <jointvel name="joint2_vel" joint="joint2"/>
+    <jointvel name="joint3_vel" joint="joint3"/>
+    <jointvel name="joint4_vel" joint="joint4"/>
+    <jointvel name="joint5_vel" joint="joint5"/>
+    <jointvel name="joint6_vel" joint="joint6"/>
+    <jointvel name="joint7_vel" joint="joint7"/>
+
+    <!-- End-effector pose (at gripper center, between fingers) -->
+    <framepos  name="ee_pos"  objtype="site" objname="gripper_center"/>
+    <framequat name="ee_quat" objtype="site" objname="gripper_center"/>
+  </sensor>
+</mujoco>

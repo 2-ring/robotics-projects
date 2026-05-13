@@ -1,0 +1,207 @@
+<mujoco model="turtlebot_scene">
+    <compiler angle="radian" autolimits="true"/>
+    <option timestep="0.002" gravity="0 0 -9.81" integrator="implicitfast"/>
+
+    <visual>
+        <headlight ambient="0.35 0.35 0.35" diffuse="0.7 0.7 0.7"/>
+    </visual>
+
+    <default>
+        <geom friction="1.2 0.05 0.01" condim="3"/>
+    </default>
+
+    <asset>
+        <texture name="grid" type="2d" builtin="checker" rgb1="0.90 0.90 0.90" rgb2="0.82 0.82 0.82" width="256" height="256"/>
+        <material name="mat_floor" texture="grid" texrepeat="8 8"/>
+        <material name="mat_wall" rgba="0.45 0.48 0.52 1"/>
+        <material name="mat_obs" rgba="0.66 0.30 0.24 1"/>
+        <material name="mat_bot" rgba="0.13 0.42 0.64 1"/>
+        <material name="mat_wheel" rgba="0.08 0.08 0.08 1"/>
+    </asset>
+
+    <worldbody>
+        <light name="sun" pos="0 0 3" dir="0 0 -1" diffuse="0.95 0.95 0.95" castshadow="false"/>
+
+        <geom name="floor" type="plane" pos="0 0 0" size="5 5 0.1" material="mat_floor"/>
+
+        <!-- Thin boundary walls forming a 2m x 2m environment. -->
+        <geom name="wall_north" type="box" pos="0 2 0.2" size="2 0.04 0.2" material="mat_wall"/>
+        <geom name="wall_south" type="box" pos="0 -2 0.2" size="2 0.04 0.2" material="mat_wall"/>
+        <geom name="wall_east" type="box" pos="2 0 0.2" size="0.04 2 0.2" material="mat_wall"/>
+        <geom name="wall_west" type="box" pos="-2 0 0.2" size="0.04 2 0.2" material="mat_wall"/>
+
+        <!-- Static obstacles -->
+        <geom name="obs_a" type="box" pos="0.55 0.40 0.10" size="0.18 0.12 0.1" material="mat_obs"/>
+        <geom name="obs_b" type="box" pos="-0.50 0.35 0.10" size="0.14 0.22 0.1" material="mat_obs"/>
+        <geom name="obs_c" type="box" pos="-0.35 -0.45 0.10" size="0.25 0.10 0.1" material="mat_obs"/>
+        <geom name="obs_d" type="cylinder" pos="0.35 -0.30 0.10" size="0.11 0.1" material="mat_obs"/>
+        <geom name="obs_e" type="box" pos="1.50 1.05 0.10" size="0.16 0.10 0.1" material="mat_obs"/>
+        <geom name="obs_f" type="cylinder" pos="-1.55 1.00 0.10" size="0.12 0.1" material="mat_obs"/>
+        <geom name="obs_g" type="box" pos="0.35 -1.45 0.10" size="0.14 0.12 0.1" material="mat_obs"/>
+        <geom name="obs_h" type="cylinder" pos="-1.45 -0.55 0.10" size="0.10 0.1" material="mat_obs"/>
+
+        <body name="turtlebot" pos="-1 -1 0.036">
+            <freejoint name="tb_free"/>
+            <inertial pos="0 0 0" mass="2.2" diaginertia="0.02 0.02 0.03"/>
+
+            <!-- Keep one clean collision chassis + one visual shell for easier debugging. -->
+            <geom name="tb_chassis_col" type="cylinder" size="0.078 0.020" material="mat_bot" contype="0" conaffinity="0"/>
+            <geom name="tb_chassis_vis" type="cylinder" size="0.095 0.014" pos="0 0 0.024" material="mat_bot" contype="0" conaffinity="0"/>
+
+            <!-- Add a front and rear caster so the robot base doesn't tip over. -->
+            <geom name="tb_caster_front" type="sphere" pos="0.075 0 -0.025" size="0.008" mass="0.02" friction="0.02 0.001 0.0001" condim="3"/>
+            <geom name="tb_caster_back" type="sphere" pos="-0.075 0 -0.025" size="0.008" mass="0.02" friction="0.02 0.001 0.0001" condim="3"/>
+
+            <body name="tb_left_wheel" pos="0 0.09 0">
+                <joint name="tb_left_wheel_joint" type="hinge" axis="0 1 0" damping="0.05" frictionloss="0.01"/>
+                <geom name="tb_left_wheel_geom" type="cylinder" size="0.033 0.016" euler="1.57079632679 0 0" material="mat_wheel" friction="1.8 0.02 0.001" condim="6"/>
+            </body>
+
+            <body name="tb_right_wheel" pos="0 -0.09 0">
+                <joint name="tb_right_wheel_joint" type="hinge" axis="0 1 0" damping="0.05" frictionloss="0.01"/>
+                <geom name="tb_right_wheel_geom" type="cylinder" size="0.033 0.016" euler="1.57079632679 0 0" material="mat_wheel" friction="1.8 0.02 0.001" condim="6"/>
+            </body>
+
+            <site name="tb_base_site" pos="0 0 0" size="0.005" rgba="0 1 0 1"/>
+            <body name="tb_laser_head" pos="0 0 0.06">
+                <site name="tb_laser_mount" pos="0 0 0" size="0.004" rgba="1 0.6 0 1"/>
+                <site name="tb_laser_00" pos="0 0 0" zaxis="0.000000000 -1.000000000 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_01" pos="0 0 0" zaxis="0.052335956 -0.998629535 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_02" pos="0 0 0" zaxis="0.104528463 -0.994521895 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_03" pos="0 0 0" zaxis="0.156434465 -0.987688341 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_04" pos="0 0 0" zaxis="0.207911691 -0.978147601 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_05" pos="0 0 0" zaxis="0.258819045 -0.965925826 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_06" pos="0 0 0" zaxis="0.309016994 -0.951056516 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_07" pos="0 0 0" zaxis="0.358367950 -0.933580426 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_08" pos="0 0 0" zaxis="0.406736643 -0.913545458 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_09" pos="0 0 0" zaxis="0.453990500 -0.891006524 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_10" pos="0 0 0" zaxis="0.500000000 -0.866025404 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_11" pos="0 0 0" zaxis="0.544639035 -0.838670568 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_12" pos="0 0 0" zaxis="0.587785252 -0.809016994 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_13" pos="0 0 0" zaxis="0.629320391 -0.777145961 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_14" pos="0 0 0" zaxis="0.669130606 -0.743144825 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_15" pos="0 0 0" zaxis="0.707106781 -0.707106781 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_16" pos="0 0 0" zaxis="0.743144825 -0.669130606 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_17" pos="0 0 0" zaxis="0.777145961 -0.629320391 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_18" pos="0 0 0" zaxis="0.809016994 -0.587785252 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_19" pos="0 0 0" zaxis="0.838670568 -0.544639035 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_20" pos="0 0 0" zaxis="0.866025404 -0.500000000 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_21" pos="0 0 0" zaxis="0.891006524 -0.453990500 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_22" pos="0 0 0" zaxis="0.913545458 -0.406736643 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_23" pos="0 0 0" zaxis="0.933580426 -0.358367950 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_24" pos="0 0 0" zaxis="0.951056516 -0.309016994 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_25" pos="0 0 0" zaxis="0.965925826 -0.258819045 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_26" pos="0 0 0" zaxis="0.978147601 -0.207911691 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_27" pos="0 0 0" zaxis="0.987688341 -0.156434465 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_28" pos="0 0 0" zaxis="0.994521895 -0.104528463 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_29" pos="0 0 0" zaxis="0.998629535 -0.052335956 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_30" pos="0 0 0" zaxis="1.000000000 0.000000000 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_31" pos="0 0 0" zaxis="0.998629535 0.052335956 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_32" pos="0 0 0" zaxis="0.994521895 0.104528463 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_33" pos="0 0 0" zaxis="0.987688341 0.156434465 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_34" pos="0 0 0" zaxis="0.978147601 0.207911691 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_35" pos="0 0 0" zaxis="0.965925826 0.258819045 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_36" pos="0 0 0" zaxis="0.951056516 0.309016994 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_37" pos="0 0 0" zaxis="0.933580426 0.358367950 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_38" pos="0 0 0" zaxis="0.913545458 0.406736643 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_39" pos="0 0 0" zaxis="0.891006524 0.453990500 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_40" pos="0 0 0" zaxis="0.866025404 0.500000000 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_41" pos="0 0 0" zaxis="0.838670568 0.544639035 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_42" pos="0 0 0" zaxis="0.809016994 0.587785252 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_43" pos="0 0 0" zaxis="0.777145961 0.629320391 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_44" pos="0 0 0" zaxis="0.743144825 0.669130606 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_45" pos="0 0 0" zaxis="0.707106781 0.707106781 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_46" pos="0 0 0" zaxis="0.669130606 0.743144825 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_47" pos="0 0 0" zaxis="0.629320391 0.777145961 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_48" pos="0 0 0" zaxis="0.587785252 0.809016994 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_49" pos="0 0 0" zaxis="0.544639035 0.838670568 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_50" pos="0 0 0" zaxis="0.500000000 0.866025404 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_51" pos="0 0 0" zaxis="0.453990500 0.891006524 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_52" pos="0 0 0" zaxis="0.406736643 0.913545458 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_53" pos="0 0 0" zaxis="0.358367950 0.933580426 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_54" pos="0 0 0" zaxis="0.309016994 0.951056516 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_55" pos="0 0 0" zaxis="0.258819045 0.965925826 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_56" pos="0 0 0" zaxis="0.207911691 0.978147601 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_57" pos="0 0 0" zaxis="0.156434465 0.987688341 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_58" pos="0 0 0" zaxis="0.104528463 0.994521895 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_59" pos="0 0 0" zaxis="0.052335956 0.998629535 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+                <site name="tb_laser_60" pos="0 0 0" zaxis="-0.000000000 1.000000000 0" size="0.002" rgba="1 0.2 0.2 0.2"/>
+            </body>
+        </body>
+    </worldbody>
+
+    <actuator>
+        <velocity name="tb_left_wheel_act" joint="tb_left_wheel_joint" kv="2.0" ctrlrange="-20 20" forcerange="-3 3"/>
+        <velocity name="tb_right_wheel_act" joint="tb_right_wheel_joint" kv="2.0" ctrlrange="-20 20" forcerange="-3 3"/>
+    </actuator>
+
+    <sensor>
+        <framepos name="tb_base_pos" objtype="site" objname="tb_base_site"/>
+        <framequat name="tb_base_quat" objtype="site" objname="tb_base_site"/>
+        <rangefinder name="tb_laser_00" site="tb_laser_00"/>
+        <rangefinder name="tb_laser_01" site="tb_laser_01"/>
+        <rangefinder name="tb_laser_02" site="tb_laser_02"/>
+        <rangefinder name="tb_laser_03" site="tb_laser_03"/>
+        <rangefinder name="tb_laser_04" site="tb_laser_04"/>
+        <rangefinder name="tb_laser_05" site="tb_laser_05"/>
+        <rangefinder name="tb_laser_06" site="tb_laser_06"/>
+        <rangefinder name="tb_laser_07" site="tb_laser_07"/>
+        <rangefinder name="tb_laser_08" site="tb_laser_08"/>
+        <rangefinder name="tb_laser_09" site="tb_laser_09"/>
+        <rangefinder name="tb_laser_10" site="tb_laser_10"/>
+        <rangefinder name="tb_laser_11" site="tb_laser_11"/>
+        <rangefinder name="tb_laser_12" site="tb_laser_12"/>
+        <rangefinder name="tb_laser_13" site="tb_laser_13"/>
+        <rangefinder name="tb_laser_14" site="tb_laser_14"/>
+        <rangefinder name="tb_laser_15" site="tb_laser_15"/>
+        <rangefinder name="tb_laser_16" site="tb_laser_16"/>
+        <rangefinder name="tb_laser_17" site="tb_laser_17"/>
+        <rangefinder name="tb_laser_18" site="tb_laser_18"/>
+        <rangefinder name="tb_laser_19" site="tb_laser_19"/>
+        <rangefinder name="tb_laser_20" site="tb_laser_20"/>
+        <rangefinder name="tb_laser_21" site="tb_laser_21"/>
+        <rangefinder name="tb_laser_22" site="tb_laser_22"/>
+        <rangefinder name="tb_laser_23" site="tb_laser_23"/>
+        <rangefinder name="tb_laser_24" site="tb_laser_24"/>
+        <rangefinder name="tb_laser_25" site="tb_laser_25"/>
+        <rangefinder name="tb_laser_26" site="tb_laser_26"/>
+        <rangefinder name="tb_laser_27" site="tb_laser_27"/>
+        <rangefinder name="tb_laser_28" site="tb_laser_28"/>
+        <rangefinder name="tb_laser_29" site="tb_laser_29"/>
+        <rangefinder name="tb_laser_30" site="tb_laser_30"/>
+        <rangefinder name="tb_laser_31" site="tb_laser_31"/>
+        <rangefinder name="tb_laser_32" site="tb_laser_32"/>
+        <rangefinder name="tb_laser_33" site="tb_laser_33"/>
+        <rangefinder name="tb_laser_34" site="tb_laser_34"/>
+        <rangefinder name="tb_laser_35" site="tb_laser_35"/>
+        <rangefinder name="tb_laser_36" site="tb_laser_36"/>
+        <rangefinder name="tb_laser_37" site="tb_laser_37"/>
+        <rangefinder name="tb_laser_38" site="tb_laser_38"/>
+        <rangefinder name="tb_laser_39" site="tb_laser_39"/>
+        <rangefinder name="tb_laser_40" site="tb_laser_40"/>
+        <rangefinder name="tb_laser_41" site="tb_laser_41"/>
+        <rangefinder name="tb_laser_42" site="tb_laser_42"/>
+        <rangefinder name="tb_laser_43" site="tb_laser_43"/>
+        <rangefinder name="tb_laser_44" site="tb_laser_44"/>
+        <rangefinder name="tb_laser_45" site="tb_laser_45"/>
+        <rangefinder name="tb_laser_46" site="tb_laser_46"/>
+        <rangefinder name="tb_laser_47" site="tb_laser_47"/>
+        <rangefinder name="tb_laser_48" site="tb_laser_48"/>
+        <rangefinder name="tb_laser_49" site="tb_laser_49"/>
+        <rangefinder name="tb_laser_50" site="tb_laser_50"/>
+        <rangefinder name="tb_laser_51" site="tb_laser_51"/>
+        <rangefinder name="tb_laser_52" site="tb_laser_52"/>
+        <rangefinder name="tb_laser_53" site="tb_laser_53"/>
+        <rangefinder name="tb_laser_54" site="tb_laser_54"/>
+        <rangefinder name="tb_laser_55" site="tb_laser_55"/>
+        <rangefinder name="tb_laser_56" site="tb_laser_56"/>
+        <rangefinder name="tb_laser_57" site="tb_laser_57"/>
+        <rangefinder name="tb_laser_58" site="tb_laser_58"/>
+        <rangefinder name="tb_laser_59" site="tb_laser_59"/>
+        <rangefinder name="tb_laser_60" site="tb_laser_60"/>
+    </sensor>
+
+    <keyframe>
+        <key name="home" qpos="-1 -1 0.036 1 0 0 0 0 0" ctrl="0 0"/>
+    </keyframe>
+</mujoco>

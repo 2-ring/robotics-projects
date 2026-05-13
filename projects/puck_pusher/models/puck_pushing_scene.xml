@@ -1,0 +1,125 @@
+<mujoco model="puck_pushing_scene">
+  <include file="panda.xml"/>
+
+  <compiler angle="radian" autolimits="true"/>
+  <option timestep="0.002" gravity="0 0 -9.81" integrator="implicitfast"/>
+
+  <statistic center="0.3 0 0.5" extent="1.2"/>
+
+  <visual>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global azimuth="120" elevation="-20"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0" width="512" height="3072"/>
+    <texture
+      type="2d"
+      name="groundplane"
+      builtin="checker"
+      mark="edge"
+      rgb1="0.2 0.3 0.4"
+      rgb2="0.1 0.2 0.3"
+      markrgb="0.8 0.8 0.8"
+      width="300"
+      height="300"/>
+    <material
+      name="groundplane"
+      texture="groundplane"
+      texuniform="true"
+      texrepeat="5 5"
+      reflectance="0.2"/>
+    <material name="table_mat" rgba="0.45 0.35 0.25 1" specular="0.2" shininess="0.1"/>
+    <material name="puck_mat" rgba="0.85 0.15 0.15 1" specular="0.3" shininess="0.5"/>
+    <material name="goal_mat" rgba="0.15 0.80 0.25 0.4"/>
+    <material name="obstacle_mat" rgba="0.25 0.25 0.25 1" specular="0.3" shininess="0.4"/>
+    <material name="pusher_mat" rgba="0.30 0.30 0.35 1" specular="0.6" shininess="0.8"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0 0 1.5" dir="0 0 -1" directional="true"/>
+    <geom name="floor" size="0 0 0.05" type="plane" material="groundplane"/>
+    <body name="table" pos="0.65 0 0.2">
+      <geom name="table_top" type="box" size="0.35 0.45 0.02" pos="0 0 0.2" material="table_mat" mass="20"/>
+      <geom name="table_leg1" type="cylinder" size="0.025 0.2" pos="0.30 0.40 0" material="table_mat"/>
+      <geom name="table_leg2" type="cylinder" size="0.025 0.2" pos="-0.30 0.40 0" material="table_mat"/>
+      <geom name="table_leg3" type="cylinder" size="0.025 0.2" pos="0.30 -0.40 0" material="table_mat"/>
+      <geom name="table_leg4" type="cylinder" size="0.025 0.2" pos="-0.30 -0.40 0" material="table_mat"/>
+    </body>
+    <body name="puck" pos="0.48 0.0 0.432">
+      <freejoint name="puck_free"/>
+      <inertial pos="0 0 0" mass="0.18" diaginertia="0.0004 0.0004 0.0002"/>
+      <geom name="puck_geom" type="cylinder" size="0.03 0.016" material="puck_mat"
+            friction="0.4 0.02 0.01" condim="4"/>
+      <site name="puck_site" pos="0 0 0" size="0.005" rgba="1 0 0 0.5"/>
+    </body>
+    <body name="goal" mocap="true" pos="0.8 0.10 0.422">
+      <geom name="goal_geom" type="cylinder" size="0.05 0.002" material="goal_mat"
+            contype="0" conaffinity="0"/>
+      <site name="goal_site" pos="0 0 0" size="0.005" rgba="0 1 0 0.5"/>
+    </body>
+    <body name="obstacle" mocap="true" pos="0.52 0.0333333 0.432">
+      <geom name="obstacle_geom" type="cylinder" size="0.0275 0.018" material="obstacle_mat"
+            friction="0.4 0.02 0.01" condim="4" mass="0.18"/>
+    </body>
+    <body name="y_pusher" pos="0 0 0" quat="1 0 0 0">
+      <freejoint name="y_pusher_free"/>
+      <inertial pos="0 0 0.085" mass="0.15" diaginertia="0.0002 0.0002 0.0001"/>
+      <geom name="pusher_stem" type="capsule" size="0.008 0.05" pos="0 0 0.05"
+            material="pusher_mat" friction="1.2 0.02 0.01" condim="4"/>
+      <geom name="pusher_crossbar" type="capsule" size="0.008 0.04" pos="0 0 0.10"
+            euler="0 1.5708 0" material="pusher_mat" friction="1.2 0.02 0.01" condim="4"/>
+      <geom name="pusher_left" type="capsule" size="0.006 0.03" pos="-0.04 0 0.13"
+            material="pusher_mat" friction="1.2 0.02 0.01" condim="4"/>
+      <geom name="pusher_right" type="capsule" size="0.006 0.03" pos="0.04 0 0.13"
+            material="pusher_mat" friction="1.2 0.02 0.01" condim="4"/>
+      <site name="pusher_tip_site" pos="0 0 0.135" size="0.005" rgba="0 0 1 0.5"/>
+    </body>
+  </worldbody>
+
+  <equality>
+    <weld body1="hand" body2="y_pusher"
+          relpose="0 0 0.1034 0.5 0.5 0.5 0.5"
+          solref="0.0005 1" solimp="0.99 0.999 0.0001"/>
+  </equality>
+
+  <contact>
+    <exclude body1="hand" body2="y_pusher"/>
+    <exclude body1="left_finger" body2="y_pusher"/>
+    <exclude body1="right_finger" body2="y_pusher"/>
+  </contact>
+
+  <sensor>
+    <jointpos name="joint1_pos" joint="joint1"/>
+    <jointpos name="joint2_pos" joint="joint2"/>
+    <jointpos name="joint3_pos" joint="joint3"/>
+    <jointpos name="joint4_pos" joint="joint4"/>
+    <jointpos name="joint5_pos" joint="joint5"/>
+    <jointpos name="joint6_pos" joint="joint6"/>
+    <jointpos name="joint7_pos" joint="joint7"/>
+
+    <jointvel name="joint1_vel" joint="joint1"/>
+    <jointvel name="joint2_vel" joint="joint2"/>
+    <jointvel name="joint3_vel" joint="joint3"/>
+    <jointvel name="joint4_vel" joint="joint4"/>
+    <jointvel name="joint5_vel" joint="joint5"/>
+    <jointvel name="joint6_vel" joint="joint6"/>
+    <jointvel name="joint7_vel" joint="joint7"/>
+
+    <framepos name="ee_pos" objtype="body" objname="hand"/>
+    <framequat name="ee_quat" objtype="body" objname="hand"/>
+    <framepos name="pusher_tip_pos" objtype="site" objname="pusher_tip_site"/>
+    <framepos name="puck_pos" objtype="site" objname="puck_site"/>
+    <framequat name="puck_quat" objtype="body" objname="puck"/>
+    <framelinvel name="puck_vel" objtype="body" objname="puck"/>
+    <framepos name="goal_pos" objtype="site" objname="goal_site"/>
+  </sensor>
+
+  <keyframe>
+    <key
+      name="home"
+      qpos="0.0000225 -1.4632756 0.0000459 -2.6155017 0.0000499 1.1522261 0.7855477 0.00 0.00 0.38 0 0.432 1 0 0 0 0.0999954 0.0000204 0.4699911 -0.4999745 0.4999745 -0.5000255 0.5000255"
+      ctrl="0.0000225 -1.4632756 0.0000459 -2.6155017 0.0000499 1.1522261 0.7855477 0.0"/>
+  </keyframe>
+</mujoco>

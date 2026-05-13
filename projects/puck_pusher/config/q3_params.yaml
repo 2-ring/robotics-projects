@@ -1,0 +1,34 @@
+mujoco_sim_node:
+  ros__parameters:
+    sim_timestep: 0.002
+    publish_rate: 500.0
+    realtime_factor: 1.0
+    use_viewer: true
+    initial_keyframe: "home"
+    gravity_comp_hold: true
+
+bridge_node:
+  ros__parameters:
+    control_rate: 500.0
+    smooth_motion: false
+    publish_tf: true
+    initial_arm_position: [0.0000225, -1.4632756, 0.0000459, -2.6155017, 0.0000499, 1.1522261, 0.7855477]
+    initial_gripper_ctrl: 0.0
+
+q3_sensor_node:
+  ros__parameters:
+    publish_rate_hz: 100.0
+
+lfd_policy:
+  ros__parameters:
+    pose_mode: "task_pose"
+    method: "trajectory_retrieval"  # "trajectory" or "knn"
+    num_resampled_steps: 180
+    goal_tolerance_m: 0.05
+    knn_k: 5
+
+test_lfd:
+  ros__parameters:
+    goal_tolerance_m: 0.05
+    num_test_starts: 5
+    episode_timeout_s: 15.0

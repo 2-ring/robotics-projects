@@ -1,0 +1,33 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "household_core"
+version = "0.1.0"
+requires-python = ">= 3.11"
+dependencies = ["gymnasium", "matplotlib", "numpy"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/household_core"]
+
+[tool.ruff]
+line-length = 100
+indent-width = 4
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "D203",
+    "D213",
+    "TRY003",
+    "EM101",
+    "EM102",
+]
+unfixable = ["F401"]
+
+flake8-annotations = { mypy-init-return = true }
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

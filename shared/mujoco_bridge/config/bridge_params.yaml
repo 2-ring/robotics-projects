@@ -1,0 +1,6 @@
+# Bridge Node parameters
+bridge_node:
+  ros__parameters:
+    control_rate: 500.0
+    smooth_motion: true
+    publish_tf: true

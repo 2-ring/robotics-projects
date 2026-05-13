@@ -1,0 +1,6 @@
+# Bridge Node parameters
+bridge_node:
+  ros__parameters:
+    control_rate: 500.0        # Control loop rate (Hz)
+    smooth_motion: true        # Interpolate toward targets (limits joint velocity)
+    publish_tf: true           # Broadcast TF transforms

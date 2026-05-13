@@ -1,0 +1,10 @@
+# MuJoCo Simulation Node parameters (Q2)
+mujoco_sim_node:
+  ros__parameters:
+    sim_timestep: 0.001
+    publish_rate: 500.0
+    realtime_factor: 1.0
+    use_viewer: true
+    paused: false
+    initial_keyframe: "home"
+    gravity_comp_hold: true

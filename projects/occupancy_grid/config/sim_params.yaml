@@ -1,0 +1,8 @@
+# Simulator parameters for TurtleBot occupancy grid mapping
+mujoco_sim_node:
+  ros__parameters:
+    sim_timestep: 0.002
+    publish_rate: 200.0
+    realtime_factor: 1.0
+    use_viewer: true
+    initial_keyframe: "home"
